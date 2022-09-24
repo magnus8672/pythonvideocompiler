@@ -11,6 +11,8 @@ import os
 import moviepy.editor as mp
 from moviepy.editor import *
 from datetime import datetime
+import hashlib
+import time
 
 #PARAMS. Change these to suite your environment
 #Base Output Dirtectory. The place your final video will go. Make sure it exists.
@@ -38,6 +40,44 @@ date = datetime.now().strftime("%Y_%m_%d-%I_%M")
 #specify location of outoging video
 vout = bOutDir + str(date) + '_output.mp4'
 
+#Check MD5s against list of previously encountered clips and delete repeats.
+md5file = open("md5.log", "r")
+md5s = md5file.read()
+print("List of known MD5 sums")
+print(md5s)
+for filename in os.listdir(bInputDir):
+    with open(bInputDir + filename, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()    
+        # pipe contents of the file through
+        md5_returned = hashlib.md5(data).hexdigest()
+        md5str = str(md5_returned)
+        file_to_check.close()
+        if md5str in md5s:
+            print("MD5 Match found, delete previously encountered clip")
+            print("removing previously used clip" + filename)
+            #time.sleep(5)
+            os.remove(bInputDir + filename)
+
+
+#get the MD5sum of each video in the diretory and store it
+#open MD5 log for writing
+md5log = open("md5.log", "a")
+#Append Md5 value of each video in the input dir 
+for filename in os.listdir(bInputDir):
+    with open(bInputDir + filename, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()    
+        # pipe contents of the file through
+        md5_returned = hashlib.md5(data).hexdigest()
+        md5str = str(md5_returned)
+        print(md5str)
+        md5log.write(md5str + "\n")
+
+#close md5log for writing        
+md5log.close()
+
+
 #compile list of video clips from a target directory
 for filename in os.listdir(bInputDir):
     if filename.endswith(".mp4"):
@@ -56,15 +96,17 @@ cnum = len(clips)
 mnum = round(cnum/2)
 
 if compile4YT == True:
-    #add intro video to index 0 of clips
+    #add pre role to index 0 of clips
     clips.insert(0, VideoFileClip(bUtilDir + introVid))
 
     #add mid role to middle index of clips list
     clips.insert(mnum, VideoFileClip(bUtilDir + midroleVid))
 
-    #add closing outtro clip to clips list
+    #add closing clip to clips list
     clips.append(VideoFileClip(bUtilDir + outtroVid))
 
 #compile all clips in the list into a single video and place in target location specified above.
 video = concatenate_videoclips(clips, method='compose')
 video.write_videofile(vout)
+
+
