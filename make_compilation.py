@@ -19,7 +19,8 @@ bOutDir = 'D:\\somedir\\on\\your\\D\\drive\\'
 bInputDir = 'D:\\some\\OTHER\\DIR\\on\\your\\D\\drive\\'
 #Base utility Dir. The place where you will store Intro, Midrole and Outtro clips to add to the video
 bUtilDir = 'D:\\some\\third\\DIR\\'
-#Into Midrole and Outtro file names 
+#Into Midrole and Outtro file names. If you want to be a fancy pants, 
+#use these along with compile4YT flag to add specific mp4's to the front middle and end of your compilation.
 introVid = 'somefile.mp4'
 midroleVid = 'anotherfile.mp4'
 outtroVid = 'thirdfile.mp4'
