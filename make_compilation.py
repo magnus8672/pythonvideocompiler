@@ -14,7 +14,6 @@ from datetime import datetime
 import hashlib
 import time
 import configparser
-from PIL import Image, ImageFont, ImageDraw 
 
 #PARAMS. Change these to suite your environment
 config = configparser.ConfigParser()
