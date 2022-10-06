@@ -13,21 +13,19 @@ from moviepy.editor import *
 from datetime import datetime
 import hashlib
 import time
+import configparser
+from PIL import Image, ImageFont, ImageDraw 
 
 #PARAMS. Change these to suite your environment
-#Base Output Dirtectory. The place your final video will go. Make sure it exists.
-bOutDir = 'D:\\somedir\\on\\your\\D\\drive\\'
-#Base Iput Directory. The place you will take all your clips from to convert them to a single video
-bInputDir = 'D:\\some\\OTHER\\DIR\\on\\your\\D\\drive\\'
-#Base utility Dir. The place where you will store Intro, Midrole and Outtro clips to add to the video
-bUtilDir = 'D:\\some\\third\\DIR\\'
-#Into Midrole and Outtro file names. If you want to be a fancy pants, 
-#use these along with compile4YT flag to add specific mp4's to the front middle and end of your compilation.
-introVid = 'somefile.mp4'
-midroleVid = 'anotherfile.mp4'
-outtroVid = 'thirdfile.mp4'
-#BOOL to add intro/midrole/outtro
-compile4YT = False
+config = configparser.ConfigParser()
+config.read('makecomp.ini')
+bInputDir = config['options']['rootLocation']
+bOutDir = config['options']['targetLocation']
+bUtilDir = config['options']['utilityLocation']
+compile4YT = config.getboolean('youtube', 'compileForYoutube')
+introVid = config['youtube']['introFileName']
+midroleVid = config['youtube']['midRoleFileName']
+outtroVid = config['youtube']['outtroFileName']
 #END OF PARAMS
 
 
@@ -73,21 +71,30 @@ for filename in os.listdir(bInputDir):
         md5str = str(md5_returned)
         print(md5str)
         md5log.write(md5str + "\n")
+        file_to_check.close()
 
 #close md5log for writing        
 md5log.close()
 
-
 #compile list of video clips from a target directory
 for filename in os.listdir(bInputDir):
     if filename.endswith(".mp4"):
-        #resize clip to 1080p
+        #find clips with weird sizes and get rid of them, make the rest 1080p
         clip = mp.VideoFileClip((bInputDir + filename))
+        #resize clip to 1080p
         clip_resized = clip.resize(height=1080)
         clip_resized.write_videofile(bInputDir + '\\resized_' + filename)
-        
-        #append resized clip to list
-        clips.append(VideoFileClip(bInputDir + '\\resized_' + filename))
+        #Some clips resize to dumb sizes that make youtube explode. delete them
+        if (clip_resized.w % 2) == 0:
+                    print("width after resize: " + str(clip_resized.w))                   
+                    #append resized clip to list
+                    clips.append(VideoFileClip(bInputDir + '\\resized_' + filename))
+        else:
+            print("found invalid sized file: " + str(filename))
+            dfile = bInputDir + filename
+            os.remove(dfile)
+            rdfile = bInputDir + '\\resized_' + filename
+            os.remove(rdfile)
 
 #get the number of clips
 cnum = len(clips)
@@ -108,5 +115,3 @@ if compile4YT == True:
 #compile all clips in the list into a single video and place in target location specified above.
 video = concatenate_videoclips(clips, method='compose')
 video.write_videofile(vout)
-
-
