@@ -15,9 +15,9 @@ import hashlib
 import time
 import configparser
 
-#PARAMS. Change these to suite your environment
+#PARAMS. Change these to suit your environment
 config = configparser.ConfigParser()
-config.read('makecomp.ini')
+config.read('wwdmakecomp.ini')
 bInputDir = config['options']['rootLocation']
 bOutDir = config['options']['targetLocation']
 bUtilDir = config['options']['utilityLocation']
@@ -37,7 +37,27 @@ date = datetime.now().strftime("%Y_%m_%d-%I_%M")
 #specify location of outoging video
 vout = bOutDir + str(date) + '_output.mp4'
 
-#Check MD5s against list of previously encountered clips and delete repeats.
+#ensure there are no duplicate video files in the folder
+#if you ran feddit against two related sub reddits sometimes people cross post
+MD5s = []
+
+for filename in os.listdir(bInputDir):
+    with open(bInputDir + filename, 'rb') as file_to_check:
+        # read contents of the file
+        data = file_to_check.read()    
+        # pipe contents of the file through
+        md5_returned = hashlib.md5(data).hexdigest()
+        md5str = str(md5_returned)
+        file_to_check.close()
+        if md5str in MD5s:
+            print("Duplicate Video Found" + filename )
+            os.remove(bInputDir + filename)
+        else:
+            MD5s.append(md5str)
+
+#Once duplicate files are cleaned from the folder 
+#Check MD5s of remaing videos against list of previously encountered clips 
+#and delete repeats.
 md5file = open("md5.log", "r")
 md5s = md5file.read()
 print("List of known MD5 sums")
